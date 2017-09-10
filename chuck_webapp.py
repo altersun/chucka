@@ -1,7 +1,15 @@
 #! /usr/bin/env python3
 
+import logging
 import tornado.ioloop
 import tornado.web
+
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.StreamHandler())
+log.addHandler(logging.FileHandler(filename=__name__+'.log'))
+log.setLevel(logging.DEBUG)
+
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
@@ -17,20 +25,23 @@ def make_app():
         (r'/imgs/(.*)', tornado.web.StaticFileHandler, {'path' : 'static/imgs',}),
         (r"/birthday", BirthdayHandler),
         (r"/", MainHandler),
-    ])
+    ], log_function=log.info)
 
 
 def main():
+
     import os
     import signal
     import sys
 
-    print('PID is {}'.format(os.getpid()))
+
+
+    log.info('PID is {}'.format(os.getpid()))
 
     loop = tornado.ioloop.IOLoop.current()
 
     def siggie(signum, _):
-        print('Recieved signal {}, shutting down...'.format(signum))
+        log.info('Recieved signal {}, shutting down...'.format(signum))
         loop.add_callback_from_signal(loop.stop)
     signal.signal(signal.SIGINT, siggie)
     signal.signal(signal.SIGTERM, siggie)
@@ -39,12 +50,12 @@ def main():
     try:
         app.listen(80)
     except PermissionError:
-        print('Cannot bind socket 80, needed for CHUCK WEBAPP. Try again with sudo?')
+        log.exception('Cannot bind socket 80, needed for CHUCK WEBAPP. Try again with sudo?')
         sys.exit(1)
-    print('Created CHUCK WEBAPP. Starting loop...')
+    log.info('Created CHUCK WEBAPP. Starting loop...')
 
     loop.start()
-    print('We hope you enjoyed CHUCK WEBAPP. Byebye!')
+    log.info('We hope you enjoyed CHUCK WEBAPP. Byebye!')
 
 
 if __name__ == "__main__":
