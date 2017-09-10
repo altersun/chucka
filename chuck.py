@@ -21,6 +21,7 @@ def make_app():
 
 if __name__ == "__main__":
     import signal
+    import sys
 
     loop = tornado.ioloop.IOLoop.current()
 
@@ -31,7 +32,11 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, siggie)
 
     app = make_app()
-    app.listen(8888)
+    try:
+        app.listen(80)
+    except PermissionError:
+        print('Cannot bind socket 80, needed for CHUCK WEBAPP. Try again with sudo?')
+        sys.exit(1)
     print('Created CHUCK WEBAPP. Starting loop...')
 
     loop.start()
